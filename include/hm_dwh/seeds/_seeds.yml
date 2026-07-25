@@ -1,0 +1,12 @@
+version: 2
+
+seeds:
+  - name: seed_sales_channels
+    description: >
+      Channel id lookup. The dataset docs never name the channels; 1=store /
+      2=online is the community-accepted reading (2 carries ~70% of volume).
+    config:
+      column_types: {sales_channel_id: tinyint}
+  - name: seed_age_bands
+    config:
+      column_types: {min_age: smallint, max_age: smallint}
