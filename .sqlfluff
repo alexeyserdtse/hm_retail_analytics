@@ -1,0 +1,21 @@
+[sqlfluff]
+dialect = duckdb
+templater = dbt
+max_line_length = 100
+exclude_rules = ambiguous.column_count, structure.column_order
+
+[sqlfluff:templater:dbt]
+project_dir = include/hm_dwh
+profiles_dir = include/hm_dwh
+
+[sqlfluff:indentation]
+tab_space_size = 4
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower

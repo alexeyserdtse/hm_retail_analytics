@@ -1,7 +1,7 @@
 select
     customer_id,
-    FN as fn,
-    Active as active,
+    "FN" as fn,
+    "Active" as active,
     club_member_status,
     fashion_news_frequency,
     age,
