@@ -17,6 +17,16 @@ python include/scripts/csv_to_parquet.py
 IDs are kept as text on purpose: `article_id` carries leading zeros and `customer_id`
 is a hex string — numeric inference would mangle both.
 
+## Setup
+
+```bash
+python3.12 -m venv .venv && source .venv/bin/activate
+pip install dbt-duckdb duckdb pytest sqlfluff sqlfluff-templater-dbt
+cd include/hm_dwh && dbt deps && cd ../..
+export HM_DB_PATH="$PWD/dev.duckdb"
+python -m pytest
+```
+
 ## Loading
 
 The loader owns the physical `raw.*` tables in `dev.duckdb` (repo root, gitignored).
@@ -78,11 +88,3 @@ green check and a PR — no direct pushes.
   the loader.
 - The Kaggle data is competition-licensed; nothing from it is committed here.
 - `dim_article.current_price` is null for ~1k articles that never sold.
-
-## Setup
-
-```bash
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install dbt-duckdb duckdb pytest sqlfluff sqlfluff-templater-dbt
-python -m pytest
-```
