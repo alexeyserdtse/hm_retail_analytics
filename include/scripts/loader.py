@@ -56,9 +56,15 @@ class RawLoader:
         src = self.parquet_dir / "transactions_train.parquet"
         con = self._connect()
         try:
-            con.execute(f"""
-                create table if not exists raw.transactions as
-                select *, now() at time zone 'utc' as ingestion_ts from '{src}' limit 0
+            con.execute("""
+                create table if not exists raw.transactions (
+                    t_dat date,
+                    customer_id varchar,
+                    article_id varchar,
+                    price double,
+                    sales_channel_id integer,
+                    ingestion_ts timestamp
+                )
             """)
             con.execute("begin")
             try:
@@ -69,7 +75,15 @@ class RawLoader:
                 con.execute(
                     f"""
                     insert into raw.transactions
-                    select *, now() at time zone 'utc' from '{src}'
+                        (t_dat, customer_id, article_id, price, sales_channel_id, ingestion_ts)
+                    select
+                        t_dat,
+                        customer_id,
+                        article_id,
+                        price,
+                        sales_channel_id,
+                        now() at time zone 'utc'
+                    from '{src}'
                     where strftime(t_dat, '%Y-%m') = ?
                 """,
                     [month],
