@@ -1,0 +1,7 @@
+hm_dwh:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('HM_DB_PATH', '../../dev.duckdb') }}"
+      threads: 4

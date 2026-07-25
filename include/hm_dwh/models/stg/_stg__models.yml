@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_hm__transactions
+    columns:
+      - name: sale_date
+        tests: [not_null]
+      - name: article_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_hm__articles')
+              field: article_id
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_hm__customers')
+              field: customer_id
+      - name: price
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+      - name: sales_channel_id
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2]
+              quote: false
+  - name: stg_hm__articles
+    columns:
+      - name: article_id
+        tests: [not_null, unique]
+  - name: stg_hm__customers
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]

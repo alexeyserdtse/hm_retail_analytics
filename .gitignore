@@ -223,3 +223,9 @@ planning/
 # Raw data, parquet, and the local DuckDB warehouse
 include/data/
 *.duckdb
+
+# dbt artifacts
+include/hm_dwh/target/
+include/hm_dwh/dbt_packages/
+include/hm_dwh/logs/
+include/hm_dwh/.user.yml

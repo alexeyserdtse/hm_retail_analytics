@@ -1,0 +1,15 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Physical landing tables owned by the loader (include/scripts/loader.py), not dbt.
+    schema: raw
+    loaded_at_field: ingestion_ts
+    freshness:
+      warn_after: {count: 48, period: hour}
+    tables:
+      - name: transactions
+      - name: articles
+      - name: customers
+      - name: load_log
+        freshness: null
