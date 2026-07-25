@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local planning notes and working docs (kept out of the published repo)
+planning/
+
+# Raw data, parquet, and the local DuckDB warehouse
+include/data/
+*.duckdb
