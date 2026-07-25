@@ -100,6 +100,19 @@ python -m pytest
 
 ## Data
 
+The dataset comes from H&M Group's 2022 Kaggle competition: real (anonymized)
+e-commerce and store sales from hm.com, published to build recommendation
+systems. Three files matter here:
+
+| File | Rows | Contents |
+|---|---|---|
+| `transactions_train.csv` | 31.8M | one row per item purchased: date, customer, article, price, channel (2018-09-20 → 2020-09-22) |
+| `articles.csv` | 105k | product catalog: merchandise hierarchy, garment group, color, department |
+| `customers.csv` | 1.4M | customer attributes: age, club membership, fashion-news subscription |
+
+The competition also ships ~25 GB of product images — irrelevant for a
+warehouse and skipped by the per-file download below.
+
 The dataset (~3.5 GB, three CSVs) is competition-licensed and never enters the
 repo. Download `transactions_train.csv`, `articles.csv` and `customers.csv`
 from Kaggle (accept the competition rules first) into `include/data/raw/`,
