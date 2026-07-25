@@ -1,0 +1,29 @@
+name: hm_dwh
+version: "1.0.0"
+profile: hm_dwh
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+
+models:
+  hm_dwh:
+    raw:
+      +materialized: view
+      +schema: raw
+    stg:
+      +materialized: view
+      +schema: stg
+    dwh:
+      +materialized: table
+      +schema: dwh
+
+seeds:
+  hm_dwh:
+    +schema: dwh
+
+snapshots:
+  hm_dwh:
+    +schema: stg
