@@ -9,11 +9,7 @@ from airflow.sdk import Asset, dag
 DBT = "/usr/local/dbt-venv/bin/dbt"
 PROJECT = "/usr/local/airflow/include/hm_dwh"
 
-DEFAULT_ARGS = {
-    "owner": "alexey",
-    "retries": 1,
-    "retry_delay": timedelta(minutes=5),
-}
+DEFAULT_ARGS = {"owner": "alexey", "retries": 1, "retry_delay": timedelta(minutes=5)}
 
 
 @dag(

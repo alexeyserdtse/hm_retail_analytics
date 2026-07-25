@@ -8,11 +8,7 @@ from airflow.sdk import Asset, dag, task
 
 RAW_HM_ASSET = Asset("duckdb://raw/hm")
 
-DEFAULT_ARGS = {
-    "owner": "alexey",
-    "retries": 2,
-    "retry_delay": timedelta(minutes=2),
-}
+DEFAULT_ARGS = {"owner": "alexey", "retries": 2, "retry_delay": timedelta(minutes=2)}
 
 
 @dag(
