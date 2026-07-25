@@ -37,8 +37,9 @@ models:
         description: Latest observed monthly median price, from the open snapshot row.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              strictly: true
+              arguments:
+                min_value: 0
+                strictly: true
   - name: fct_sales
     description: >
       Sales fact at (sale_date, customer_id, article_id, sales_channel_id)
@@ -47,30 +48,32 @@ models:
       be reprocessed without affecting the rest of the table.
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [sale_date, customer_id, article_id, channel_sk]
+          arguments:
+            combination_of_columns: [sale_date, customer_id, article_id, channel_sk]
     columns:
       - name: customer_sk
         description: Foreign key to dim_customer.
         tests:
           - not_null
-          - relationships: {to: ref('dim_customer'), field: customer_sk}
+          - relationships: {arguments: {to: ref('dim_customer'), field: customer_sk}}
       - name: article_sk
         description: Foreign key to dim_article.
         tests:
           - not_null
-          - relationships: {to: ref('dim_article'), field: article_sk}
+          - relationships: {arguments: {to: ref('dim_article'), field: article_sk}}
       - name: channel_sk
         description: Foreign key to dim_channel.
         tests:
           - not_null
-          - relationships: {to: ref('dim_channel'), field: channel_sk}
+          - relationships: {arguments: {to: ref('dim_channel'), field: channel_sk}}
       - name: sale_date
         description: Foreign key to dim_date.
         tests:
           - not_null
-          - relationships: {to: ref('dim_date'), field: date_day}
+          - relationships: {arguments: {to: ref('dim_date'), field: date_day}}
       - name: quantity
         description: Count of raw transaction rows in this grain (repeat purchases count as separate units).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 1
+              arguments:
+                min_value: 1

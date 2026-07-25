@@ -18,28 +18,32 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_hm__articles')
-              field: article_id
+              arguments:
+                to: ref('stg_hm__articles')
+                field: article_id
       - name: customer_id
         description: Natural key of the purchasing customer.
         tests:
           - not_null
           - relationships:
-              to: ref('stg_hm__customers')
-              field: customer_id
+              arguments:
+                to: ref('stg_hm__customers')
+                field: customer_id
       - name: price
         description: Transaction price, cast to decimal(12,8).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              strictly: true
+              arguments:
+                min_value: 0
+                strictly: true
       - name: sales_channel_id
         description: Channel code, cast to tinyint; domain is {1, 2} (see seed_sales_channels).
         tests:
           - not_null
           - accepted_values:
-              values: [1, 2]
-              quote: false
+              arguments:
+                values: [1, 2]
+                quote: false
   - name: stg_hm__articles
     description: >
       Cleaned article attributes: renames prod_name to product_name and
