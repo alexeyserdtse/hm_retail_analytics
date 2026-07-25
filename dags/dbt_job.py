@@ -25,10 +25,15 @@ DEFAULT_ARGS = {
     tags=["dbt"],
 )
 def dbt_job():
-    BashOperator(
+    build = BashOperator(
         task_id="dbt_build",
         bash_command=f"{DBT} build --project-dir {PROJECT} --profiles-dir {PROJECT}",
     )
+    freshness = BashOperator(
+        task_id="dbt_source_freshness",
+        bash_command=f"{DBT} source freshness --project-dir {PROJECT} --profiles-dir {PROJECT}",
+    )
+    build >> freshness
 
 
 dbt_job()
