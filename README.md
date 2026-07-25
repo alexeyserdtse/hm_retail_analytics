@@ -24,11 +24,64 @@ Kaggle CSVs ──► parquet ──► loader ──► raw ──► stg ─�
 | `stg` | rename, cast, clean — 1:1 with raw, no joins | view |
 | `dwh` | business-facing star schema | table |
 
+```mermaid
+erDiagram
+    dim_date ||--o{ fct_sales : "sale_date"
+    dim_customer ||--o{ fct_sales : "customer_sk"
+    dim_article ||--o{ fct_sales : "article_sk"
+    dim_channel ||--o{ fct_sales : "channel_sk"
+    dim_article ||--o{ dim_article_price_history : "article_id"
+
+    fct_sales {
+        date sale_date FK
+        varchar customer_sk FK
+        varchar article_sk FK
+        varchar channel_sk FK
+        date sale_month
+        bigint quantity
+        double sales_amount
+    }
+    dim_date {
+        date date_day PK
+        int year
+        int quarter
+        varchar month_name
+        boolean is_weekend
+    }
+    dim_customer {
+        varchar customer_sk PK
+        varchar customer_id
+        boolean has_fashion_news
+        boolean is_active
+        smallint age
+        varchar age_band
+    }
+    dim_article {
+        varchar article_sk PK
+        varchar article_id
+        varchar product_name
+        varchar product_group_name
+        varchar department_name
+        varchar garment_group_name
+        decimal current_price
+    }
+    dim_channel {
+        varchar channel_sk PK
+        tinyint sales_channel_id
+        varchar channel_name
+    }
+    dim_article_price_history {
+        varchar price_version_sk PK
+        varchar article_id
+        decimal median_price
+        timestamp valid_from
+        timestamp valid_to
+        boolean is_current
+    }
 ```
-dim_customer ─┐               ┌─ dim_article ── snap_article_price (SCD2)
-              ├── fct_sales ──┤
-dim_date ─────┘               └─ dim_channel
-```
+
+`dim_article_price_history` is the SCD2 output of `snap_article_price`
+(dbt snapshot over the raw layer); `is_current` marks each article's open row.
 
 `fct_sales` is incremental (delete+insert by month; grain: date × customer ×
 article × channel). `snap_article_price` tracks monthly median price per
