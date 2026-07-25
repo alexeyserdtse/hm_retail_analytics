@@ -35,3 +35,9 @@ lint: test ## alias
 
 clean: ## drop derived local state (keeps raw csvs)
 	rm -rf include/hm_dwh/target include/hm_dwh/logs include/data/parquet dev.duckdb
+
+up: ## start local airflow (astro)
+	astro dev start
+
+down: ## stop local airflow
+	astro dev stop

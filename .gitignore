@@ -229,3 +229,6 @@ include/hm_dwh/target/
 include/hm_dwh/dbt_packages/
 include/hm_dwh/logs/
 include/hm_dwh/.user.yml
+
+# astro local state
+.astro/config.yaml.lock
