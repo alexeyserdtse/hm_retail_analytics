@@ -9,7 +9,11 @@ sources:
       warn_after: {count: 48, period: hour}
     tables:
       - name: transactions
+        description: Raw transaction line items, one row per purchase, loaded month by month.
       - name: articles
+        description: Raw article master data, one row per article_id, full-replace on every load.
       - name: customers
+        description: Raw customer master data, one row per customer_id, full-replace on every load.
       - name: load_log
+        description: Loader audit log, one row per load attempt (table_name, partition, rows, loaded_at, status).
         freshness: null
