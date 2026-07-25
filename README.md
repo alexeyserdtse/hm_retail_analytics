@@ -76,7 +76,7 @@ tests), dbt_project_evaluator (structure lint), codegen (yml scaffolding).
 
 ```bash
 python -m pytest                     # loader + converter tests
-sqlfluff lint include/hm_dwh/models
+sqlfluff lint include/hm_dwh
 ```
 
 CI runs the same on every PR: pytest, `dbt parse`, sqlfluff. `master` requires a
