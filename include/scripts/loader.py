@@ -31,54 +31,83 @@ class RawLoader:
         """)
         return con
 
+    def _validate_name(self, name: str) -> str:
+        """Validate dimension table name against whitelist."""
+        if name not in ("articles", "customers"):
+            raise ValueError(f"Invalid table name: {name}")
+        return name
+
     def load_dimension(self, name: str) -> int:
+        name = self._validate_name(name)
         src = self.parquet_dir / f"{name}.parquet"
         con = self._connect()
-        con.execute(f"""
-            create or replace table raw.{name} as
-            select *, now() at time zone 'utc' as ingestion_ts from '{src}'
-        """)
-        rows = con.sql(f"select count(*) from raw.{name}").fetchone()[0]
-        self._log(con, name, "full", rows)
-        return rows
+        try:
+            con.execute(f"""
+                create or replace table raw.{name} as
+                select *, now() at time zone 'utc' as ingestion_ts from '{src}'
+            """)
+            rows = con.sql(f"select count(*) from raw.{name}").fetchone()[0]
+            self._log(con, name, "full", rows)
+            return rows
+        finally:
+            con.close()
 
     def load_transactions_month(self, month: str) -> int:
         src = self.parquet_dir / "transactions_train.parquet"
         con = self._connect()
-        con.execute(f"""
-            create table if not exists raw.transactions as
-            select *, now() at time zone 'utc' as ingestion_ts from '{src}' limit 0
-        """)
-        con.execute("begin")
-        con.execute(
-            f"delete from raw.transactions where strftime(t_dat, '%Y-%m') = '{month}'"
-        )
-        con.execute(f"""
-            insert into raw.transactions
-            select *, now() at time zone 'utc' from '{src}'
-            where strftime(t_dat, '%Y-%m') = '{month}'
-        """)
-        con.execute("commit")
-        rows = con.sql(
-            f"select count(*) from raw.transactions where strftime(t_dat, '%Y-%m') = '{month}'"
-        ).fetchone()[0]
-        self._log(con, "transactions", month, rows)
-        return rows
+        try:
+            con.execute(f"""
+                create table if not exists raw.transactions as
+                select *, now() at time zone 'utc' as ingestion_ts from '{src}' limit 0
+            """)
+            con.execute("begin")
+            try:
+                con.execute(
+                    "delete from raw.transactions where strftime(t_dat, '%Y-%m') = ?",
+                    [month],
+                )
+                con.execute(
+                    f"""
+                    insert into raw.transactions
+                    select *, now() at time zone 'utc' from '{src}'
+                    where strftime(t_dat, '%Y-%m') = ?
+                """,
+                    [month],
+                )
+                con.execute("commit")
+                rows = con.sql(
+                    "select count(*) from raw.transactions where strftime(t_dat, '%Y-%m') = ?",
+                    params=[month],
+                ).fetchone()[0]
+                self._log(con, "transactions", month, rows)
+                return rows
+            except Exception:
+                try:
+                    con.execute("rollback")
+                except Exception:
+                    pass
+                self._log(con, "transactions", month, 0, status="failed")
+                raise
+        finally:
+            con.close()
 
     def months(self) -> list[str]:
         src = self.parquet_dir / "transactions_train.parquet"
         con = duckdb.connect()
-        return [
-            r[0]
-            for r in con.sql(
-                f"select distinct strftime(t_dat, '%Y-%m') from '{src}' order by 1"
-            ).fetchall()
-        ]
+        try:
+            return [
+                r[0]
+                for r in con.sql(
+                    f"select distinct strftime(t_dat, '%Y-%m') from '{src}' order by 1"
+                ).fetchall()
+            ]
+        finally:
+            con.close()
 
-    def _log(self, con, table: str, partition: str, rows: int):
+    def _log(self, con, table: str, partition: str, rows: int, status: str = "ok"):
         con.execute(
-            "insert into raw.load_log (table_name, partition, rows, status) values (?, ?, ?, 'ok')",
-            [table, partition, rows],
+            "insert into raw.load_log (table_name, partition, rows, status) values (?, ?, ?, ?)",
+            [table, partition, rows, status],
         )
 
 
