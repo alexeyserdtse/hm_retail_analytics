@@ -24,6 +24,21 @@ models:
       - name: customer_sk
         description: Surrogate key, hashed from customer_id.
         tests: [not_null, unique]
+  - name: dim_article_price_history
+    description: >
+      SCD2 price history per article, one row per price version from
+      snap_article_price. is_current marks the open row (exactly one per
+      article present in transactions).
+    columns:
+      - name: price_version_sk
+        description: Surrogate key, hashed from article_id + valid_from.
+        tests: [not_null, unique]
+      - name: article_id
+        description: Natural key; unique among current rows only.
+        tests:
+          - unique:
+              config:
+                where: is_current
   - name: dim_article
     description: >
       Article dimension. current_price is the article's live median price
