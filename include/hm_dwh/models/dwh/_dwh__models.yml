@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: dim_date
+    columns:
+      - name: date_day
+        tests: [not_null, unique]
+  - name: dim_channel
+    columns:
+      - name: channel_sk
+        tests: [not_null, unique]
+  - name: dim_customer
+    columns:
+      - name: customer_sk
+        tests: [not_null, unique]
+  - name: dim_article
+    columns:
+      - name: article_sk
+        tests: [not_null, unique]
+      - name: current_price
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              strictly: true
+  - name: fct_sales
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [sale_date, customer_id, article_id, channel_sk]
+    columns:
+      - name: customer_sk
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_customer'), field: customer_sk}
+      - name: article_sk
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_article'), field: article_sk}
+      - name: channel_sk
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_channel'), field: channel_sk}
+      - name: sale_date
+        tests:
+          - not_null
+          - relationships: {to: ref('dim_date'), field: date_day}
+      - name: quantity
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1

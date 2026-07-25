@@ -1,7 +1,8 @@
 select
     customer_id,
-    "FN" as fn,
-    "Active" as active,
+    -- quotes are load-bearing: they force the view to expose lowercase names
+    "FN" as fn,  -- noqa: RF06
+    "Active" as active,  -- noqa: RF06
     club_member_status,
     fashion_news_frequency,
     age,
