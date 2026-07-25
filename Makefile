@@ -4,7 +4,9 @@ DBT := cd include/hm_dwh && ../../$(VENV)/bin/dbt
 COMPETITION := h-and-m-personalized-fashion-recommendations
 RAW := include/data/raw
 
-.PHONY: setup data load build test lint clean help
+.PHONY: setup data load build test lint clean help quickstart
+
+quickstart: setup data load build test ## everything: venv, download, load, build, verify
 
 help:
 	@grep -E '^[a-z]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'

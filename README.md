@@ -11,6 +11,27 @@ Dimensional warehouse over the [H&M fashion dataset](https://www.kaggle.com/comp
 31.8M transactions across 25 months, modeled as a Kimball star with SCD2 price
 history. dbt on DuckDB; Airflow orchestration is the next milestone.
 
+## Quickstart
+
+One-time prerequisites: a Kaggle account with the
+[competition rules](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/rules)
+accepted and an API token at `~/.kaggle/kaggle.json`; Python 3.12 (or `uv`).
+
+```bash
+git clone https://github.com/alexeyserdtse/hm_retail_analytics.git
+cd hm_retail_analytics
+make quickstart        # venv + download + load + dbt build + tests
+```
+
+With orchestration (needs Docker + [Astro CLI](https://www.astronomer.io/docs/astro/cli/install-cli)):
+
+```bash
+make up                # airflow at http://localhost:8080
+```
+
+Unpause both DAGs there and catchup replays all 25 months through the
+ingestion → dbt pipeline.
+
 ## Architecture
 
 ```
