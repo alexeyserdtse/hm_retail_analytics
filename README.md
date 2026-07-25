@@ -9,7 +9,67 @@
 
 Dimensional warehouse over the [H&M fashion dataset](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations):
 31.8M transactions across 25 months, modeled as a Kimball star with SCD2 price
-history. dbt on DuckDB; Airflow orchestration is the next milestone.
+history. dbt on DuckDB, orchestrated by Airflow (Astro runtime).
+
+## Quickstart
+
+0. **Prerequisites:** git, make, unzip, and Python 3.12.
+
+   *Ubuntu/Debian:*
+
+   ```bash
+   sudo apt-get install -y git make unzip
+   sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt-get update && sudo apt-get install -y python3.12 python3.12-venv
+   ```
+
+   *macOS* (with [Homebrew](https://brew.sh); make ships with the Xcode command-line tools):
+
+   ```bash
+   xcode-select --install
+   brew install git python@3.12
+   ```
+
+   *Windows:* use [WSL2](https://learn.microsoft.com/windows/wsl/install)
+   (`wsl --install` in an admin PowerShell, then Ubuntu from the Microsoft
+   Store) and follow the Ubuntu steps inside it — the Makefile assumes a
+   POSIX shell. Docker Desktop integrates with WSL2 for the Airflow part.
+
+   (Any other way of getting a 3.12 interpreter — uv, pyenv, conda — works the
+   same; `make setup` only needs `python3.12` on PATH.)
+
+1. **Kaggle access** (one-time): create a [Kaggle](https://www.kaggle.com) account,
+   accept the [competition rules](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/rules),
+   then Kaggle → Settings → API → *Create New Token* and place the file:
+
+   ```bash
+   mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
+   ```
+
+2. **Clone:**
+
+   ```bash
+   git clone https://github.com/alexeyserdtse/hm_retail_analytics.git
+   cd hm_retail_analytics
+   ```
+
+3. **Build the warehouse** (~3.5 GB download, a few minutes to load):
+
+   ```bash
+   make quickstart        # venv + download + load + dbt build + tests
+   ```
+
+   The result is `dev.duckdb` at the repo root — open it with any DuckDB client.
+
+4. **Orchestration (optional):** install [Docker](https://docs.docker.com/engine/install/)
+   and the [Astro CLI](https://www.astronomer.io/docs/astro/cli/install-cli), then:
+
+   ```bash
+   make up                # airflow at http://localhost:8080
+   ```
+
+5. In the Airflow UI, unpause `hm_ingestion` and `dbt_job` — catchup replays all
+   25 months through the ingestion → dbt pipeline, and the SCD2 price history
+   builds up month by month.
 
 ## Architecture
 
@@ -88,16 +148,6 @@ article × channel). `snap_article_price` tracks monthly median price per
 article — it reads only the raw layer and only `dim_article` consumes it,
 which keeps the dbt graph acyclic.
 
-## Setup
-
-```bash
-python3.12 -m venv .venv && source .venv/bin/activate
-pip install dbt-duckdb duckdb pytest sqlfluff sqlfluff-templater-dbt
-cd include/hm_dwh && dbt deps && cd ../..
-export HM_DB_PATH="$PWD/dev.duckdb"
-python -m pytest
-```
-
 ## Data
 
 The dataset comes from H&M Group's 2022 Kaggle competition: real (anonymized)
@@ -114,9 +164,28 @@ The competition also ships ~25 GB of product images — irrelevant for a
 warehouse and skipped by the per-file download below.
 
 The dataset (~3.5 GB, three CSVs) is competition-licensed and never enters the
-repo. Download `transactions_train.csv`, `articles.csv` and `customers.csv`
-from Kaggle (accept the competition rules first) into `include/data/raw/`,
-then convert them once to Parquet:
+repo. With Kaggle access in place (Quickstart step 1), make fetches everything:
+
+```bash
+make data
+```
+
+or do it by hand — download each file from the
+[data tab](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data)
+([transactions_train.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=transactions_train.csv),
+[articles.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=articles.csv),
+[customers.csv](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations/data?select=customers.csv))
+into `include/data/raw/`, or use the kaggle CLI directly:
+
+```bash
+cd include/data/raw
+kaggle competitions download -c h-and-m-personalized-fashion-recommendations -f transactions_train.csv
+kaggle competitions download -c h-and-m-personalized-fashion-recommendations -f articles.csv
+kaggle competitions download -c h-and-m-personalized-fashion-recommendations -f customers.csv
+unzip -o '*.zip' && rm -f *.zip && cd ../../..
+```
+
+Then convert once to Parquet (skip if you used `make data` — it already did):
 
 ```bash
 python include/scripts/csv_to_parquet.py
@@ -166,7 +235,8 @@ sqlfluff lint include/hm_dwh
 ```
 
 CI runs pytest, `dbt parse`, and sqlfluff on every PR. `master` is protected:
-merge requires a pull request and a green check, admins included.
+merge requires a pull request and a green check, admins included. Every
+workflow command lives in the [Makefile](Makefile) — `make help` lists them.
 
 ## License
 

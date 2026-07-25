@@ -4,7 +4,9 @@ DBT := cd include/hm_dwh && ../../$(VENV)/bin/dbt
 COMPETITION := h-and-m-personalized-fashion-recommendations
 RAW := include/data/raw
 
-.PHONY: setup data load build test lint clean help
+.PHONY: setup data load build test lint clean help quickstart
+
+quickstart: setup data load build test ## everything: venv, download, load, build, verify
 
 help:
 	@grep -E '^[a-z]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-8s %s\n", $$1, $$2}'
@@ -35,3 +37,9 @@ lint: test ## alias
 
 clean: ## drop derived local state (keeps raw csvs)
 	rm -rf include/hm_dwh/target include/hm_dwh/logs include/data/parquet dev.duckdb
+
+up: ## start local airflow (astro)
+	astro dev start
+
+down: ## stop local airflow
+	astro dev stop

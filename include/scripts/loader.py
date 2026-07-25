@@ -32,7 +32,7 @@ class RawLoader:
         return con
 
     def _validate_name(self, name: str) -> str:
-        """Validate dimension table name against whitelist."""
+        """name gets interpolated into raw SQL below — allow only known tables."""
         if name not in ("articles", "customers"):
             raise ValueError(f"Invalid table name: {name}")
         return name
