@@ -8,17 +8,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # dbt parse doesn't touch the database, but point it at a throwaway
+      # path anyway rather than the (gitignored, never-present-in-CI) dev.duckdb.
+      HM_DB_PATH: /tmp/ci.duckdb
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install test dependencies
-        run: pip install duckdb pytest
+      - name: Install dependencies
+        run: pip install duckdb pytest dbt-duckdb sqlfluff sqlfluff-templater-dbt
       - name: Run tests
+        run: python -m pytest -q
+      - name: dbt parse
         run: |
-          if [ -d tests ]; then
-            python -m pytest -q
-          else
-            echo "no tests yet"
-          fi
+          cd include/hm_dwh
+          dbt deps
+          dbt parse
+      - name: sqlfluff
+        run: sqlfluff lint include/hm_dwh/models
