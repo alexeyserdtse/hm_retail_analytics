@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: raw_transactions
+    description: >
+      Interface view onto raw.transactions. Thin passthrough, no casts or
+      renames; stg_hm__transactions does the cleaning.
+    columns:
+      - name: t_dat
+        description: Purchase date as loaded from source (uncast).
+      - name: customer_id
+        description: Natural key of the purchasing customer.
+      - name: article_id
+        description: Natural key of the purchased article.
+      - name: price
+        description: Transaction price as loaded from source (uncast).
+      - name: sales_channel_id
+        description: Raw channel code as loaded from source (1=store, 2=online).
+      - name: ingestion_ts
+        description: UTC timestamp the loader wrote this row.
+    # No primary-key test here: a transaction line has no natural single-column
+    # or composite key (repeat rows are legitimate repeat purchases, see
+    # stg_hm__transactions). See dbt_project_evaluator_exceptions.csv.
+
+  - name: raw_articles
+    description: >
+      Interface view onto raw.articles. Thin passthrough, no casts or
+      renames; stg_hm__articles does the cleaning.
+    columns:
+      - name: article_id
+        description: Natural key, one row per article.
+        tests: [not_null, unique]
+
+  - name: raw_customers
+    description: >
+      Interface view onto raw.customers. FN/Active exposed lowercase as
+      fn/active (see load-bearing quoting note in the model SQL);
+      stg_hm__customers does the cleaning.
+    columns:
+      - name: customer_id
+        description: Natural key, one row per customer.
+        tests: [not_null, unique]

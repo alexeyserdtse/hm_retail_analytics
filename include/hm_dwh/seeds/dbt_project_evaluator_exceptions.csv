@@ -1,0 +1,9 @@
+fct_name,column_name,id_to_exclude,comment
+fct_sources_without_freshness,resource_name,raw.load_log,Loader audit log; not an externally refreshed dataset so freshness does not apply
+fct_root_models,child,dim_date,Generated from a date spine macro; has no upstream ref by design
+fct_unused_sources,parent,raw.load_log,Audit-only table populated by the loader; not meant to feed any model
+fct_missing_primary_key_tests,resource_name,raw_transactions,No natural single-column key; repeat rows are legitimate repeat purchases (see stg_hm__transactions)
+fct_missing_primary_key_tests,resource_name,stg_hm__transactions,Repeat rows are legitimate repeat purchases; fct_sales aggregates to the tested unique grain
+fct_model_directories,resource_name,stg_hm__customers,Flat models/stg layer is the deliberate raw/stg/dwh layout; not nested per source like dbt-labs staging
+fct_model_directories,resource_name,stg_hm__transactions,Flat models/stg layer is the deliberate raw/stg/dwh layout; not nested per source like dbt-labs staging
+fct_model_directories,resource_name,stg_hm__articles,Flat models/stg layer is the deliberate raw/stg/dwh layout; not nested per source like dbt-labs staging

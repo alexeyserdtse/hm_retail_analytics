@@ -2,37 +2,62 @@ version: 2
 
 models:
   - name: stg_hm__transactions
+    description: >
+      Cleaned transaction line items: casts sale_date/price/sales_channel_id,
+      no renaming of the natural keys. No deduplication anywhere in this
+      model; repeat rows are legitimate repeat purchases, so there is no
+      single-column or composite primary key to test (see
+      dbt_project_evaluator_exceptions.csv). fct_sales aggregates to the
+      grain that is tested downstream.
     columns:
       - name: sale_date
+        description: Date of the purchase, cast from raw t_dat.
         tests: [not_null]
       - name: article_id
+        description: Natural key of the purchased article.
         tests:
           - not_null
           - relationships:
-              to: ref('stg_hm__articles')
-              field: article_id
+              arguments:
+                to: ref('stg_hm__articles')
+                field: article_id
       - name: customer_id
+        description: Natural key of the purchasing customer.
         tests:
           - not_null
           - relationships:
-              to: ref('stg_hm__customers')
-              field: customer_id
+              arguments:
+                to: ref('stg_hm__customers')
+                field: customer_id
       - name: price
+        description: Transaction price, cast to decimal(12,8).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              strictly: true
+              arguments:
+                min_value: 0
+                strictly: true
       - name: sales_channel_id
+        description: Channel code, cast to tinyint; domain is {1, 2} (see seed_sales_channels).
         tests:
           - not_null
           - accepted_values:
-              values: [1, 2]
-              quote: false
+              arguments:
+                values: [1, 2]
+                quote: false
   - name: stg_hm__articles
+    description: >
+      Cleaned article attributes: renames prod_name to product_name and
+      detail_desc to detail_description, casts product_code to integer.
     columns:
       - name: article_id
+        description: Natural key, one row per article.
         tests: [not_null, unique]
   - name: stg_hm__customers
+    description: >
+      Cleaned customer attributes: FN/Active nulls treated as false (not
+      opted in), fashion_news_frequency's stray 'None' string folded to
+      'NONE' (true nulls stay null).
     columns:
       - name: customer_id
+        description: Natural key, one row per customer.
         tests: [not_null, unique]

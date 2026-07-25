@@ -2,48 +2,78 @@ version: 2
 
 models:
   - name: dim_date
+    description: >
+      Date dimension, one row per calendar day from 2018-09-01 to
+      2099-12-31, with calendar attributes (year, quarter, month, weekday,
+      weekend flag). Root model: generated from a date spine, no upstream
+      ref by design (see dbt_project_evaluator_exceptions.csv).
     columns:
       - name: date_day
+        description: Natural key, one row per calendar day.
         tests: [not_null, unique]
   - name: dim_channel
+    description: Sales channel dimension built from the seed_sales_channels lookup.
     columns:
       - name: channel_sk
+        description: Surrogate key, hashed from sales_channel_id.
         tests: [not_null, unique]
   - name: dim_customer
+    description: >
+      Customer dimension with an age band looked up from seed_age_bands.
     columns:
       - name: customer_sk
+        description: Surrogate key, hashed from customer_id.
         tests: [not_null, unique]
   - name: dim_article
+    description: >
+      Article dimension. current_price is the article's live median price
+      from snap_article_price (the SCD2 snapshot's open row); null for
+      articles never sold.
     columns:
       - name: article_sk
+        description: Surrogate key, hashed from article_id.
         tests: [not_null, unique]
       - name: current_price
+        description: Latest observed monthly median price, from the open snapshot row.
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              strictly: true
+              arguments:
+                min_value: 0
+                strictly: true
   - name: fct_sales
+    description: >
+      Sales fact at (sale_date, customer_id, article_id, sales_channel_id)
+      grain. quantity counts source rows; sales_amount sums price.
+      Incremental delete+insert keyed by sale_month, so a single month can
+      be reprocessed without affecting the rest of the table.
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [sale_date, customer_id, article_id, channel_sk]
+          arguments:
+            combination_of_columns: [sale_date, customer_id, article_id, channel_sk]
     columns:
       - name: customer_sk
+        description: Foreign key to dim_customer.
         tests:
           - not_null
-          - relationships: {to: ref('dim_customer'), field: customer_sk}
+          - relationships: {arguments: {to: ref('dim_customer'), field: customer_sk}}
       - name: article_sk
+        description: Foreign key to dim_article.
         tests:
           - not_null
-          - relationships: {to: ref('dim_article'), field: article_sk}
+          - relationships: {arguments: {to: ref('dim_article'), field: article_sk}}
       - name: channel_sk
+        description: Foreign key to dim_channel.
         tests:
           - not_null
-          - relationships: {to: ref('dim_channel'), field: channel_sk}
+          - relationships: {arguments: {to: ref('dim_channel'), field: channel_sk}}
       - name: sale_date
+        description: Foreign key to dim_date.
         tests:
           - not_null
-          - relationships: {to: ref('dim_date'), field: date_day}
+          - relationships: {arguments: {to: ref('dim_date'), field: date_day}}
       - name: quantity
+        description: Count of raw transaction rows in this grain (repeat purchases count as separate units).
         tests:
           - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 1
+              arguments:
+                min_value: 1

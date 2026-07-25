@@ -23,7 +23,34 @@ models:
 seeds:
   hm_dwh:
     +schema: dwh
+  dbt_project_evaluator:
+    # We ship our own dbt_project_evaluator_exceptions seed (below); disable
+    # the package's blank placeholder so ours is the one dbt resolves.
+    dbt_project_evaluator_exceptions:
+      +enabled: false
 
 snapshots:
   hm_dwh:
     +schema: stg
+
+# dbt_project_evaluator customization: this project uses a raw/stg/dwh layer
+# split (raw = thin source interfaces, stg = cleaning, dwh = star schema)
+# instead of the package's dbt-labs default of staging/intermediate/marts.
+# Rather than rename our layers to match the package's expectations, we
+# remap its naming-convention vars per its own docs:
+# dbt_packages/dbt_project_evaluator/docs/customization/overriding-variables.md
+vars:
+  dbt_project_evaluator:
+    model_types: ["raw", "staging", "marts"]
+    raw_folder_name: "raw"
+    raw_prefixes: ["raw_"]
+    staging_folder_name: "stg"
+    staging_prefixes: ["stg_"]
+    marts_folder_name: "dwh"
+    marts_prefixes: ["dim_", "fct_"]
+    # Untested by design: 2 of the 3 raw_* interface views now carry a
+    # primary-key test (see models/raw/_raw__models.yml); raw_transactions
+    # and stg_hm__transactions have no natural key (repeat rows are
+    # legitimate repeat purchases) so 10/11 models are tested (90.9%).
+    # See dbt_project_evaluator_exceptions.csv for the per-model exceptions.
+    test_coverage_target: 90
